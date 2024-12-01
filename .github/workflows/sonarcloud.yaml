@@ -1,21 +1,26 @@
-on:
-  # Trigger analysis when pushing in master or pull requests, and when creating
-  # a pull request.
-  push:
-    branches:
-      - master
-  pull_request:
-      types: [opened, synchronize, reopened]
-name: Main Workflow
+name:  Workflow for SAST Scan
+on:  push
 jobs:
   sonarcloud:
-    runs-on: ubuntu-latest
+    runs-on:  ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-      with:
-        # Disabling shallow clone is recommended for improving relevancy of reporting
-        fetch-depth: 0
-    - name: SonarCloud Scan
-      uses: sonarsource/sonarcloud-github-action@<action version> # Ex: v2.1.0, See the latest version at https://github.com/marketplace/actions/sonarcloud-scan
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    -  uses:  actions/checkout@v3
+    -  name:  Set up JDK 11
+       uses:  actions/setup-java@v3
+       with:
+         java-version:  '11'
+         distribution:  'temurin'
+         server-id:  github
+         settings-path:  ${{  github.workspace  }}
+         cache:  maven
+    -  name:  Build with Maven
+       run:  |
+         mvn verify sonar:sonar \
+         -Dsonar.projectKey=sonarcloud-analysis_java  \
+         -Dsonar.organization=SonarAnalysisECCouncilTraining  \
+         -Dsonar.host.url=https://sonarcloud.io
+
+       env:
+         GITHUB_TOKEN:  ${{  secrets.GITHUB_TOKEN  }}
+         SONAR_TOKEN:  ${{  secrets.SONAR_TOKEN  }}
+         
